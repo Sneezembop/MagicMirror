@@ -1,0 +1,1 @@
+function clockTick(timeID, dateID){};

@@ -1,0 +1,37 @@
+body {
+    background-color: black;
+}
+
+h1 {
+    color: GhostWhite;
+    margin-left: 20px;
+	font-family: Helvetica, sans-serif;
+}
+h2 {
+    color: DarkGrey;
+    margin-left: 20px;
+	font-family: Helvetica, sans-serif;
+}
+div.left {
+	position: fixed;
+	text-align: left;
+	left: 30px;
+	top: 30px;
+}
+div.fontBig {
+	font-size: 60px;
+    color: GhostWhite;
+	font-family: Helvetica, sans-serif;
+}
+div.fontSmall {
+	font-size: 26px;
+    color: DarkGrey;
+	font-family: Helvetica, sans-serif;
+}
+div.right {
+	position: fixed;
+	text-align: right;
+	right: 30px;
+	top: 30px;
+
+}

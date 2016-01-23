@@ -1,8 +1,210 @@
+<!DOCTYPE html>
 <html>
+<head>
+	<link rel="stylesheet" type="text/css" href="css/weather-icons.min.css">
+	<link rel="stylesheet" type="text/css" href="css/MagicMirror.css">
+</head>
+<body onload="updateClock(); setInterval('updateClock()', 1000 )">
+	
+	<script type="text/javascript" src="jquery-1.12.0.min.js"></script>
+	<script type="text/javascript" src="moment.js"></script>
+	<script type="text/javascript" src="clock.js"></script>
 
+	<script type="text/javascript">
 
+	
+	var lastWeatherUpdate = -1;
+	var lastClockUpdate =-1;
+	
+	function updateClock()
+	{
+		// Time (left hand top corner)
+		
+		var currentTimestamp = new Date();
+		 
+		if (moment().format("m") != lastClockUpdate) {
+		
+		
+		var currentDate = moment().format("ddd, MMMM D");
+		var currentTime = moment().format("HH:mm");
+		
+		document.getElementById("date").firstChild.nodeValue = currentDate;
+		document.getElementById("clock").firstChild.nodeValue = currentTime;
+		
+		lastClockUpdate = moment().format("m");
+		
+		console.log( "clock updated at " + lastClockUpdate + " minutes");
+		
+		}
+		// if it's been an hour, check the weather!
+		if (moment().format("H") != lastWeatherUpdate) {
+		
+			var getWeatherJSON = new XMLHttpRequest();
+			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/conditions/q/MA/Boston.json";
+		
+			getWeatherJSON.onreadystatechange = function() {
+				if (getWeatherJSON.readyState == 4 && getWeatherJSON.status == 200){
+					var myArr = JSON.parse(getWeatherJSON.responseText)
+					updateWeather(myArr);
+				}
+			};		
+			getWeatherJSON.open("GET", url, true);
+			getWeatherJSON.send();
+			
+			var getForecastJSON = new XMLHttpRequest();
+			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/forecast/q/MA/Boston.json";
+		
+			getForecastJSON.onreadystatechange = function() {
+				if (getForecastJSON.readyState == 4 && getForecastJSON.status == 200){
+					var myArr = JSON.parse(getForecastJSON.responseText)
+					updateForecast(myArr);
+				}
+			};		
+			getForecastJSON.open("GET", url, true);
+			getForecastJSON.send();
+			
+			lastWeatherUpdate = moment().format("H");
+			console.log( "weather updated at " + lastWeatherUpdate + " hours");
+		}
+		
+	}
 
+		// Weather (right hand top corner)
+	function updateWeather(arr)
+	{
+		var currentLocation = "HERE";
+		var currentWeather = "IS RAIN";
+		var currentWeatherIcon = "";
+		
+		currentLocation = arr.current_observation.display_location.full;
+		currentWeather = arr.current_observation.temp_f + "°f";
+		
+		currentWeatherIcon = getWeatherIcon(arr.current_observation.icon);
 
+		
+		
+		document.getElementById("locationNow").firstChild.nodeValue = currentLocation;
+		document.getElementById("weatherNow").firstChild.nodeValue = " " + currentWeather;
+		document.getElementById("weatherIcon").className = currentWeatherIcon;
 
-
+	}
+	function updateForecast(arr)
+	{
+		var period = 0;
+		var date = "Nul";
+		var icon = "";
+		var tempHi = 0;
+		var tempLo = 0;
+		var tempString = "";
+		var elementID = "";
+		
+		for (var i = 0; i <= 3; i++) {
+			console.log(i);
+			
+			date = arr.forecast.simpleforecast.forecastday[i].date.weekday_short;
+			elementID = i + "dayDate";
+			document.getElementById(elementID).firstChild.nodeValue = date + " ";
+			
+			icon = getWeatherIcon(arr.forecast.simpleforecast.forecastday[i].icon);
+			elementID = i + "dayIcon";
+			document.getElementById(elementID).className = icon;
+			
+			tempHi = arr.forecast.simpleforecast.forecastday[i].high.fahrenheit;
+			tempLo = arr.forecast.simpleforecast.forecastday[i].low.fahrenheit;
+			tempString = " " + tempHi + "|" + tempLo + "";
+			elementID = i + "dayTemp";
+			document.getElementById(elementID).firstChild.nodeValue = tempString;
+		
+		}
+		//
+	}
+	
+	function getWeatherIcon(lookupString) {
+	
+		var returnString = "";
+		switch (lookupString)
+		{
+			case "snow-wind":
+				returnString = "wi-wu-chanceflurries";
+				break;
+			case "rain":
+				returnString = "wi-wu-chancerain";
+				break;
+			case "sleet":
+				returnString = "wi-wu-chancesleat";
+				break;
+			case "snow":
+				returnString = "wi-wu-chancesnow";
+				break;		
+			case "thunderstorm":
+				returnString = "wi-wu-chancetstorms";
+				break;
+			case "day-sunny":
+				returnString = "wi-wu-clear";
+				break;
+			case "day-cloudy":
+				returnString = "wi-wu-cloudy";
+				break;
+			case "snow-wind":
+				returnString = "wi-wu-flurries";
+				break;
+			case "day-haze":
+				returnString = "wi-wu-hazy";
+				break;	
+			case "showers":
+				returnString = "wi-wu-rain";
+				break;					
+			default:
+				returnString = "wi-wu-unknown";
+		}
+		
+		
+		returnString = "wi " + returnString;
+		
+		console.log(lookupString);
+		console.log(returnString);
+		return returnString;
+	
+	
+	}
+	
+	
+	
+	</script>
+	<!--   Clock & Date    -->
+	<div class="left">
+		<div class="fontSmall">
+			<span id="date">&nbsp;</span>
+		</div>
+		<font size=10><br></font>
+		<div class="fontBig">
+			<span id="clock">&nbsp;</span>
+		</div>
+	</div>
+	
+	<!--  Weather  -->
+	<div class="right">
+		<div class="fontSmall">
+			<span id ="locationNow">&nbsp;</span>
+		</div>
+		<font size=10><br></font>
+		<div class="fontBig">
+			<i id ="weatherIcon"></i><span id ="weatherNow">&nbsp;</span>
+		</div>
+		<font size=10><br></font>
+		<!-- Forecast -->
+		<div class="fontSmall">
+			<span id = "0dayDate">&nbsp;</span><i id ="0dayIcon"></i><span id ="0dayTemp">&nbsp;</span>
+			<font size=10><br></font>
+			<span id = "1dayDate">&nbsp;</span><i id ="1dayIcon"></i><span id ="1dayTemp">&nbsp;</span>
+			<font size=10><br></font>
+			<span id = "2dayDate">&nbsp;</span><i id ="2dayIcon"></i><span id ="2dayTemp">&nbsp;</span>
+			<font size=10><br></font>
+			<span id = "3dayDate">&nbsp;</span><i id ="3dayIcon"></i><span id ="3dayTemp">&nbsp;</span>
+		</div>
+		
+		
+	</div>
+	
+</body>
 </html>
