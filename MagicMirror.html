@@ -5,7 +5,7 @@
 	<link rel="stylesheet" type="text/css" href="css/MagicMirror.css">
 </head>
 <body onload="updateClock(); setInterval('updateClock()', 1000 )">
-	
+	<div id = "wholePage">
 	<script type="text/javascript" src="jquery-1.12.0.min.js"></script>
 	<script type="text/javascript" src="moment.js"></script>
 	<script type="text/javascript" src="clock.js"></script>
@@ -15,6 +15,11 @@
 	
 	var lastWeatherUpdate = -1;
 	var lastClockUpdate =-1;
+	
+	// not used right now, but for config refactoring later
+	var State = "MA";
+	var City = "Somerville";
+	
 	
 	function updateClock()
 	{
@@ -27,20 +32,21 @@
 		
 		var currentDate = moment().format("ddd, MMMM D");
 		var currentTime = moment().format("HH:mm");
+		var timeIcon = getTimeIcon(moment().format("H"));
 		
-		document.getElementById("date").firstChild.nodeValue = currentDate;
-		document.getElementById("clock").firstChild.nodeValue = currentTime;
+		document.getElementById("date").firstChild.nodeValue = currentDate + " ";
+		document.getElementById("clock").firstChild.nodeValue = " " + currentTime;
+		document.getElementById("timeIcon").className = timeIcon;
 		
 		lastClockUpdate = moment().format("m");
 		
-		console.log( "clock updated at " + lastClockUpdate + " minutes");
 		
 		}
 		// if it's been an hour, check the weather!
 		if (moment().format("H") != lastWeatherUpdate) {
 		
 			var getWeatherJSON = new XMLHttpRequest();
-			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/conditions/q/MA/Boston.json";
+			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/conditions/q/MA/Somerville.json";
 		
 			getWeatherJSON.onreadystatechange = function() {
 				if (getWeatherJSON.readyState == 4 && getWeatherJSON.status == 200){
@@ -52,7 +58,7 @@
 			getWeatherJSON.send();
 			
 			var getForecastJSON = new XMLHttpRequest();
-			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/forecast/q/MA/Boston.json";
+			var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/forecast/q/MA/Somerville.json";
 		
 			getForecastJSON.onreadystatechange = function() {
 				if (getForecastJSON.readyState == 4 && getForecastJSON.status == 200){
@@ -63,8 +69,28 @@
 			getForecastJSON.open("GET", url, true);
 			getForecastJSON.send();
 			
+			if (lastWeatherUpdate <= 0) {
+			
+				var getAstronomyJSON = new XMLHttpRequest();
+				var url = "http://api.wunderground.com/api/ecd87c5b6828a71f/astronomy/q/MA/Somerville.json";
+		
+				getAstronomyJSON.onreadystatechange = function() {
+					if (getAstronomyJSON.readyState == 4 && getAstronomyJSON.status == 200){
+						var myArr = JSON.parse(getAstronomyJSON.responseText)
+						updateAstronomy(myArr);
+					}
+				};		
+				getAstronomyJSON.open("GET", url, true);
+				getAstronomyJSON.send();
+				console.log( "Astronomy Updated at " + lastWeatherUpdate + " hours");
+			
+			}
+			
+			
 			lastWeatherUpdate = moment().format("H");
 			console.log( "weather updated at " + lastWeatherUpdate + " hours");
+			
+			
 		}
 		
 	}
@@ -99,7 +125,6 @@
 		var elementID = "";
 		
 		for (var i = 0; i <= 3; i++) {
-			console.log(i);
 			
 			date = arr.forecast.simpleforecast.forecastday[i].date.weekday_short;
 			elementID = i + "dayDate";
@@ -117,6 +142,21 @@
 		
 		}
 		//
+	}
+	function updateAstronomy(arr)
+	{	
+		var dawnTime = "";
+		var duskTime = "";
+		var moonIcon = "";
+		
+		dawnTime = " " + arr.moon_phase.sunrise.hour + ":" + arr.moon_phase.sunrise.minute + " ";
+		duskTime = " " + arr.moon_phase.sunset.hour + ":" + arr.moon_phase.sunset.minute + " ";
+		moonIcon = getMoonIcon(arr.moon_phase.ageOfMoon);
+		
+		document.getElementById("dawnTime").firstChild.nodeValue = dawnTime;
+		document.getElementById("duskTime").firstChild.nodeValue = duskTime;
+		document.getElementById("moonIcon").className = moonIcon;
+	
 	}
 	
 	function getWeatherIcon(lookupString) {
@@ -142,7 +182,13 @@
 			case "day-sunny":
 				returnString = "wi-wu-clear";
 				break;
+			case "clear":
+				returnString = "wi-wu-clear";
+				break;
 			case "day-cloudy":
+				returnString = "wi-wu-cloudy";
+				break;
+			case "partlycloudy":
 				returnString = "wi-wu-cloudy";
 				break;
 			case "snow-wind":
@@ -155,56 +201,159 @@
 				returnString = "wi-wu-rain";
 				break;					
 			default:
-				returnString = "wi-wu-unknown";
+				returnString = "wi-cloud-refresh";
 		}
 		
 		
 		returnString = "wi " + returnString;
 		
-		console.log(lookupString);
-		console.log(returnString);
+		return returnString;
+	}
+	function getTimeIcon(currentHours) {
+	
+		var returnString = "";
+		
+		if (currentHours > 12){
+			currentHours = currentHours- 12;
+		}
+		
+		returnString = "wi wi-time-" + currentHours;
+		
 		return returnString;
 	
-	
 	}
-	
+	function getMoonIcon(ageOfMoon) {
+		var moonIcon = "";
+		
+		switch (ageOfMoon){
+			case "1":
+				moonIcon = "wi-moon-new";
+				break;
+			case "2":
+				moonIcon = "wi-moon-waxing-crescent-1";
+				break;
+			case "3":
+				moonIcon = "wi-moon-waxing-crescent-2";
+				break;
+			case "4":
+				moonIcon = "wi-moon-waxing-crescent-3";
+				break;
+			case "5":
+				moonIcon = "wi-moon-waxing-crescent-4";
+				break;
+			case "6":
+				moonIcon = "wi-moon-waxing-crescent-5";
+				break;
+			case "7":
+				moonIcon = "wi-moon-waxing-crescent-6";
+				break;
+			case "8":
+				moonIcon = "wi-moon-first-quarter";
+				break;
+			case "9":
+				moonIcon = "wi-moon-waxing-gibbous-1";
+				break;
+			case "10":
+				moonIcon = "wi-moon-waxing-gibbous-2";
+				break;
+			case "11":
+				moonIcon = "wi-moon-waxing-gibbous-3";
+				break;
+			case "12":
+				moonIcon = "wi-moon-waxing-gibbous-4";
+				break;
+			case "13":
+				moonIcon = "wi-moon-waxing-gibbous-5";
+				break;
+			case "14":
+				moonIcon = "wi-moon-waxing-gibbous-6";
+				break;
+			case "15":
+				moonIcon = "wi-moon-full";
+				break;
+			case "16":
+				moonIcon = "wi-moon-waning-gibbous-1";
+				break;
+			case "17":
+				moonIcon = "wi-moon-waning-gibbous-2";
+				break;
+			case "18":
+				moonIcon = "wi-moon-waning-gibbous-3";
+				break;
+			case "19":
+				moonIcon = "wi-moon-waning-gibbous-4";
+				break;
+			case "20":
+				moonIcon = "wi-moon-waning-gibbous-5";
+				break;
+			case "21":
+				moonIcon = "wi-moon-waning-gibbous-6";
+				break;
+			case "22":
+				moonIcon = "wi-moon-third_quarter";
+				break;
+			case "23":
+				moonIcon = "wi-moon-waning-crescent-1";
+				break;
+			case "24":
+				moonIcon = "wi-moon-waning-crescent-2";
+				break;
+			case "25":
+				moonIcon = "wi-moon-waning-crescent-3";
+				break;
+			case "26":
+				moonIcon = "wi-moon-waning-crescent-4";
+				break;
+			case "27":
+				moonIcon = "wi-moon-waning-crescent-5";
+				break;
+			case "28":
+				moonIcon = "wi-moon-waning-crescent-6";
+				break;
+			default:
+				moonIcon = "wi-cloud-refresh";
+		}
+		
+		moonIcon = "wi " + moonIcon; 
+		return moonIcon;
+		
+	}
 	
 	
 	</script>
 	<!--   Clock & Date    -->
 	<div class="left">
-		<div class="fontSmall">
-			<span id="date">&nbsp;</span>
+		<div class="fontBig"><div class = "fade1">
+			<span id="date">&nbsp;</span><i id = "moonIcon"></i>
 		</div>
-		<font size=10><br></font>
-		<div class="fontBig">
-			<span id="clock">&nbsp;</span>
-		</div>
+
+		<div class="fontExtraBig">
+			<i id ="timeIcon"></i><span id="clock">&nbsp;</span>
+		</div></div>
+		<div class="fontSmall"><div class = "fade1">
+			<i class = "wi wi-sunrise"></i><span id = "dawnTime">&nbsp;</span>
+			<i class = "wi wi-sunset"></i><span id = "duskTime">&nbsp;</span>
+		</div></div>
 	</div>
 	
 	<!--  Weather  -->
 	<div class="right">
-		<div class="fontSmall">
+		<div class="fontMed">
 			<span id ="locationNow">&nbsp;</span>
 		</div>
-		<font size=10><br></font>
 		<div class="fontBig">
 			<i id ="weatherIcon"></i><span id ="weatherNow">&nbsp;</span>
 		</div>
-		<font size=10><br></font>
 		<!-- Forecast -->
 		<div class="fontSmall">
-			<span id = "0dayDate">&nbsp;</span><i id ="0dayIcon"></i><span id ="0dayTemp">&nbsp;</span>
-			<font size=10><br></font>
-			<span id = "1dayDate">&nbsp;</span><i id ="1dayIcon"></i><span id ="1dayTemp">&nbsp;</span>
-			<font size=10><br></font>
-			<span id = "2dayDate">&nbsp;</span><i id ="2dayIcon"></i><span id ="2dayTemp">&nbsp;</span>
-			<font size=10><br></font>
-			<span id = "3dayDate">&nbsp;</span><i id ="3dayIcon"></i><span id ="3dayTemp">&nbsp;</span>
+			<div class="fade0"><span id = "0dayDate">&nbsp;</span><i id ="0dayIcon"></i><span id ="0dayTemp">&nbsp;</span></div><br>
+			<div class="fade1"><span id = "1dayDate">&nbsp;</span><i id ="1dayIcon"></i><span id ="1dayTemp">&nbsp;</span></div><br>
+			<div class="fade2"><span id = "2dayDate">&nbsp;</span><i id ="2dayIcon"></i><span id ="2dayTemp">&nbsp;</span></div><br>
+			<div class="fade3"><span id = "3dayDate">&nbsp;</span><i id ="3dayIcon"></i><span id ="3dayTemp">&nbsp;</span></div><br>
 		</div>
 		
 		
 	</div>
-	
+	</div>
 </body>
 </html>

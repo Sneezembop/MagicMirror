@@ -2,36 +2,49 @@ body {
     background-color: black;
 }
 
-h1 {
-    color: GhostWhite;
-    margin-left: 20px;
-	font-family: Helvetica, sans-serif;
-}
-h2 {
-    color: DarkGrey;
-    margin-left: 20px;
-	font-family: Helvetica, sans-serif;
-}
 div.left {
+	padding: 0px;
 	position: fixed;
 	text-align: left;
 	left: 30px;
 	top: 30px;
 }
+div.fontExtraBig {
+	font-size: 120px;
+	color: #F7F7F7;
+	font-family: Helvetica, sans-serif;
+}
 div.fontBig {
 	font-size: 60px;
-    color: GhostWhite;
+    color: #F7F7F7;
+	font-family: Helvetica, sans-serif;
+}
+div.fontMed {
+	font-size: 40px;
+    color: #E3E3E3;
 	font-family: Helvetica, sans-serif;
 }
 div.fontSmall {
 	font-size: 26px;
-    color: DarkGrey;
+    color: #E3E3E3;
 	font-family: Helvetica, sans-serif;
 }
 div.right {
+	padding: 0px;
 	position: fixed;
 	text-align: right;
 	right: 30px;
 	top: 30px;
-
+}
+div.fade0 {
+    color: #E3E3E3;
+}
+div.fade1 {
+    color: #C7C7C7;
+}
+div.fade2 {
+    color: #ADADAD;
+}
+div.fade3 {
+    color: #6E6E6E;
 }
